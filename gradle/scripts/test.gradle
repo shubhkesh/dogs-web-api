@@ -1,0 +1,34 @@
+tasks.named('test') {
+    systemProperties = System.properties
+
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+
+    finalizedBy jacocoTestReport
+
+    outputs.cacheIf { false }
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    systemProperties = System.properties
+
+    testClassesDirs = testing.suites.test.sources.output.classesDirs
+    classpath = testing.suites.test.sources.runtimeClasspath
+
+    useJUnitPlatform {
+        includeTags 'integration'
+        excludeTags 'test'
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+check.dependsOn test

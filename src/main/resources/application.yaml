@@ -1,0 +1,50 @@
+service:
+  name: dogs-web-api
+  version: 1.0.0
+
+spring:
+  application:
+    name: ${service.name}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:dogsdb;DB_CLOSE_DELAY=-1;NON_KEYWORDS=VALUE}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:create-drop}
+    show-sql: false
+    open-in-view: false
+  h2:
+    console:
+      enabled: ${H2_CONSOLE_ENABLED:true}
+      path: /h2-console
+  jackson:
+    default-property-inclusion: non_null
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.dogs.api: ${LOG_LEVEL_APP:DEBUG}
+    org.springframework.web: ${LOG_LEVEL_SPRING_WEB:DEBUG}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+
+server:
+  port: ${PORT:8080}

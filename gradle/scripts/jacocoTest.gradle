@@ -1,0 +1,39 @@
+jacoco {
+    toolVersion = "${jacocoVersion}"
+}
+
+def jacoco_exclude = [
+        'com/dogs/api/DogsWebApiApplication.class',
+        'com/dogs/api/configuration/**',
+        'com/dogs/api/model/**',
+        'com/dogs/api/dto/**',
+        'com/dogs/api/constants/**',
+]
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = true
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacoco_exclude)
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.70
+            }
+        }
+    }
+}

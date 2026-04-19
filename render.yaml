@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: dogs-web-api
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: dogs-db
+          property: jdbcConnectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: dogs-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: dogs-db
+          property: password
+
+databases:
+  - name: dogs-db
+    plan: free
+    region: oregon
+    databaseName: dogsdb
+    user: dogsuser
