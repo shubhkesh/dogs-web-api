@@ -9,10 +9,18 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: SPRING_DATASOURCE_URL
+      - key: DB_HOST
         fromDatabase:
           name: dogs-db
-          property: jdbcConnectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: dogs-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: dogs-db
+          property: database
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: dogs-db
