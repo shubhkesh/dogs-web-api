@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.List;
@@ -24,6 +25,7 @@ public class DataSeeder implements ApplicationRunner {
     private final ObjectMapper objectMapper;
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) throws Exception {
         if (breedRepository.count() > 0) {
             log.info("Database already contains data, skipping seed");
