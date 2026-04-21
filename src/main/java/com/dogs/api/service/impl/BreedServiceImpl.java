@@ -3,6 +3,7 @@ package com.dogs.api.service.impl;
 import com.dogs.api.dto.request.AddSubBreedRequest;
 import com.dogs.api.dto.request.CreateBreedRequest;
 import com.dogs.api.dto.request.UpdateBreedRequest;
+import com.dogs.api.dto.request.UpdateSubBreedRequest;
 import com.dogs.api.dto.response.BreedResponse;
 import com.dogs.api.exception.BreedAlreadyExistsException;
 import com.dogs.api.exception.BreedNotFoundException;
@@ -30,14 +31,14 @@ public class BreedServiceImpl implements BreedService {
     @Override
     @Transactional(readOnly = true)
     public List<BreedResponse> getAllBreeds() {
-        log.debug("Fetching all breeds");
+        log.info("Fetching all breeds");
         return breedMapper.toResponseList(breedRepository.findAllWithSubBreeds());
     }
 
     @Override
     @Transactional(readOnly = true)
     public BreedResponse getBreed(String breedName) {
-        log.debug("Fetching breed: {}", breedName);
+        log.info("Fetching breed: {}", breedName);
         return breedMapper.toResponse(findBreedByName(breedName));
     }
 
@@ -92,7 +93,7 @@ public class BreedServiceImpl implements BreedService {
     @Override
     @Transactional(readOnly = true)
     public List<String> getSubBreeds(String breedName) {
-        log.debug("Fetching sub-breeds for: {}", breedName);
+        log.info("Fetching sub-breeds for: {}", breedName);
         return findBreedByName(breedName).getSubBreeds().stream()
                 .map(SubBreed::getName)
                 .sorted()
@@ -118,6 +119,29 @@ public class BreedServiceImpl implements BreedService {
                 .build();
 
         breed.getSubBreeds().add(subBreed);
+        return breedMapper.toResponse(breedRepository.save(breed));
+    }
+
+    @Override
+    @Transactional
+    public BreedResponse updateSubBreed(String breedName, String subBreedName, UpdateSubBreedRequest request) {
+        Breed breed = findBreedByName(breedName);
+        String newSubBreedName = normalize(request.getName());
+        log.info("Updating sub-breed '{}' to '{}' in breed '{}'", subBreedName, newSubBreedName, breedName);
+
+        SubBreed subBreed = breed.getSubBreeds().stream()
+                .filter(s -> s.getName().equalsIgnoreCase(subBreedName))
+                .findFirst()
+                .orElseThrow(() -> new BreedNotFoundException(
+                        "Sub-breed '" + subBreedName + "' not found in breed '" + breedName + "'"));
+
+        boolean alreadyExists = breed.getSubBreeds().stream()
+                .anyMatch(s -> s.getName().equalsIgnoreCase(newSubBreedName));
+        if (alreadyExists) {
+            throw new SubBreedAlreadyExistsException(newSubBreedName, breedName);
+        }
+
+        subBreed.setName(newSubBreedName);
         return breedMapper.toResponse(breedRepository.save(breed));
     }
 

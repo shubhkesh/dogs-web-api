@@ -4,6 +4,7 @@ import com.dogs.api.constants.ApiConstants;
 import com.dogs.api.dto.request.AddSubBreedRequest;
 import com.dogs.api.dto.request.CreateBreedRequest;
 import com.dogs.api.dto.request.UpdateBreedRequest;
+import com.dogs.api.dto.request.UpdateSubBreedRequest;
 import com.dogs.api.dto.response.ApiResponse;
 import com.dogs.api.dto.response.BreedResponse;
 import com.dogs.api.service.BreedService;
@@ -31,7 +32,7 @@ public class BreedController {
     @GetMapping
     @Operation(summary = "Get all breeds", description = "Returns all dog breeds with their sub-breeds, sorted alphabetically")
     public ResponseEntity<ApiResponse<List<BreedResponse>>> getAllBreeds() {
-        log.debug("GET /breeds");
+        log.info("GET /breeds");
         return ResponseEntity.ok(ApiResponse.success("Breeds retrieved successfully", breedService.getAllBreeds()));
     }
 
@@ -39,7 +40,7 @@ public class BreedController {
     @Operation(summary = "Get a breed by name", description = "Returns a single breed and its sub-breeds")
     public ResponseEntity<ApiResponse<BreedResponse>> getBreed(
             @Parameter(description = "Name of the breed", example = "bulldog") @PathVariable String breedName) {
-        log.debug("GET /breeds/{}", breedName);
+        log.info("GET /breeds/{}", breedName);
         return ResponseEntity.ok(ApiResponse.success("Breed retrieved successfully", breedService.getBreed(breedName)));
     }
 
@@ -86,6 +87,16 @@ public class BreedController {
         BreedResponse updated = breedService.addSubBreed(breedName, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Sub-breed added successfully", updated));
+    }
+
+    @PutMapping("/{breedName}/sub-breeds/{subBreedName}")
+    @Operation(summary = "Update a sub-breed", description = "Renames an existing sub-breed within a breed")
+    public ResponseEntity<ApiResponse<BreedResponse>> updateSubBreed(
+            @Parameter(description = "Name of the breed", example = "bulldog") @PathVariable String breedName,
+            @Parameter(description = "Current name of the sub-breed", example = "french") @PathVariable String subBreedName,
+            @Valid @RequestBody UpdateSubBreedRequest request) {
+        log.info("PUT /breeds/{}/sub-breeds/{}", breedName, subBreedName);
+        return ResponseEntity.ok(ApiResponse.success("Sub-breed updated successfully", breedService.updateSubBreed(breedName, subBreedName, request)));
     }
 
     @DeleteMapping("/{breedName}/sub-breeds/{subBreedName}")
