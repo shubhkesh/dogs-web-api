@@ -8,9 +8,9 @@ The API is pre-seeded with 70+ dog breeds from the supplied dataset and exposes 
 
 | Resource | URL |
 |---|---|
-| Swagger UI | `https://dogs-web-api-9ttp.onrender.com/swagger-ui.html` |
-| API Docs (JSON) | `https://dogs-web-api-9ttp.onrender.com/api-docs` |
-| Health Check | `https://dogs-web-api-9ttp.onrender.com/actuator/health` |
+| Swagger UI | `https://dogs-web-api-a7xk.onrender.com/swagger-ui.html` |
+| API Docs (JSON) | `https://dogs-web-api-a7xk.onrender.com/api-docs` |
+| Health Check | `https://dogs-web-api-a7xk.onrender.com/actuator/health` |
 
 ---
 
