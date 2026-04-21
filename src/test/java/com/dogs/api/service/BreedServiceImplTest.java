@@ -3,6 +3,7 @@ package com.dogs.api.service;
 import com.dogs.api.dto.request.AddSubBreedRequest;
 import com.dogs.api.dto.request.CreateBreedRequest;
 import com.dogs.api.dto.request.UpdateBreedRequest;
+import com.dogs.api.dto.request.UpdateSubBreedRequest;
 import com.dogs.api.dto.response.BreedResponse;
 import com.dogs.api.exception.BreedAlreadyExistsException;
 import com.dogs.api.exception.BreedNotFoundException;
@@ -153,6 +154,26 @@ class BreedServiceImplTest {
         verify(breedRepository).save(breed);
     }
 
+    @Test
+    @DisplayName("updateBreed throws BreedNotFoundException for unknown breed")
+    void updateBreed_unknownBreed_throwsNotFoundException() {
+        when(breedRepository.findByNameIgnoreCase(anyString())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> breedService.updateBreed("unknown", new UpdateBreedRequest("newname")))
+                .isInstanceOf(BreedNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("updateBreed throws BreedAlreadyExistsException for duplicate name")
+    void updateBreed_duplicateName_throwsAlreadyExistsException() {
+        Breed breed = buildBreed("bulldog");
+        when(breedRepository.findByNameIgnoreCase("bulldog")).thenReturn(Optional.of(breed));
+        when(breedRepository.existsByNameIgnoreCase("poodle")).thenReturn(true);
+
+        assertThatThrownBy(() -> breedService.updateBreed("bulldog", new UpdateBreedRequest("poodle")))
+                .isInstanceOf(BreedAlreadyExistsException.class);
+    }
+
     } // end UpdateBreed
 
     @Nested
@@ -180,6 +201,32 @@ class BreedServiceImplTest {
     }
 
     } // end DeleteBreed
+
+    @Nested
+    @DisplayName("getSubBreeds")
+    class GetSubBreeds {
+
+    @Test
+    @DisplayName("returns sorted sub-breed names for existing breed")
+    void getSubBreeds_existingBreed_returnsSubBreeds() {
+        Breed breed = buildBreed("bulldog", "french", "boston");
+        when(breedRepository.findByNameIgnoreCase("bulldog")).thenReturn(Optional.of(breed));
+
+        List<String> result = breedService.getSubBreeds("bulldog");
+
+        assertThat(result).containsExactly("boston", "french");
+    }
+
+    @Test
+    @DisplayName("getSubBreeds throws BreedNotFoundException for unknown breed")
+    void getSubBreeds_unknownBreed_throwsNotFoundException() {
+        when(breedRepository.findByNameIgnoreCase(anyString())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> breedService.getSubBreeds("unknown"))
+                .isInstanceOf(BreedNotFoundException.class);
+    }
+
+    } // end GetSubBreeds
 
     @Nested
     @DisplayName("sub-breed operations")
@@ -220,6 +267,50 @@ class BreedServiceImplTest {
         BreedResponse result = breedService.deleteSubBreed("bulldog", "french");
 
         assertThat(result.getSubBreeds()).doesNotContain("french");
+    }
+
+    @Test
+    @DisplayName("deleteSubBreed throws BreedNotFoundException for unknown sub-breed")
+    void deleteSubBreed_unknownSubBreed_throwsNotFoundException() {
+        Breed breed = buildBreed("bulldog", "french");
+        when(breedRepository.findByNameIgnoreCase("bulldog")).thenReturn(Optional.of(breed));
+
+        assertThatThrownBy(() -> breedService.deleteSubBreed("bulldog", "ghost"))
+                .isInstanceOf(BreedNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("updateSubBreed renames sub-breed successfully")
+    void updateSubBreed_validRequest_renamesSubBreed() {
+        Breed breed = buildBreed("bulldog", "french", "boston");
+        Breed saved = buildBreed("bulldog", "paris", "boston");
+        when(breedRepository.findByNameIgnoreCase("bulldog")).thenReturn(Optional.of(breed));
+        when(breedRepository.save(any(Breed.class))).thenReturn(saved);
+
+        BreedResponse result = breedService.updateSubBreed("bulldog", "french", new UpdateSubBreedRequest("paris"));
+
+        assertThat(result.getSubBreeds()).contains("paris");
+        verify(breedRepository).save(breed);
+    }
+
+    @Test
+    @DisplayName("updateSubBreed throws BreedNotFoundException for unknown sub-breed")
+    void updateSubBreed_unknownSubBreed_throwsNotFoundException() {
+        Breed breed = buildBreed("bulldog", "french");
+        when(breedRepository.findByNameIgnoreCase("bulldog")).thenReturn(Optional.of(breed));
+
+        assertThatThrownBy(() -> breedService.updateSubBreed("bulldog", "ghost", new UpdateSubBreedRequest("paris")))
+                .isInstanceOf(BreedNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("updateSubBreed throws SubBreedAlreadyExistsException for duplicate name")
+    void updateSubBreed_duplicateSubBreedName_throwsAlreadyExistsException() {
+        Breed breed = buildBreed("bulldog", "french", "boston");
+        when(breedRepository.findByNameIgnoreCase("bulldog")).thenReturn(Optional.of(breed));
+
+        assertThatThrownBy(() -> breedService.updateSubBreed("bulldog", "french", new UpdateSubBreedRequest("boston")))
+                .isInstanceOf(SubBreedAlreadyExistsException.class);
     }
 
     } // end SubBreedOperations

@@ -2,9 +2,12 @@ package com.dogs.api.controllers;
 
 import com.dogs.api.dto.request.AddSubBreedRequest;
 import com.dogs.api.dto.request.CreateBreedRequest;
+import com.dogs.api.dto.request.UpdateBreedRequest;
+import com.dogs.api.dto.request.UpdateSubBreedRequest;
 import com.dogs.api.dto.response.BreedResponse;
 import com.dogs.api.exception.BreedAlreadyExistsException;
 import com.dogs.api.exception.BreedNotFoundException;
+import com.dogs.api.exception.SubBreedAlreadyExistsException;
 import com.dogs.api.exception.GlobalExceptionHandler;
 import com.dogs.api.service.BreedService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -171,4 +174,154 @@ class BreedControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.subBreeds[0]").value("boston"));
     }
+
+    @Nested
+    @DisplayName("PUT /api/v1/breeds/{name}")
+    class UpdateBreed {
+
+    @Test
+    @DisplayName("returns 200 for valid rename")
+    void updateBreed_validRequest_returns200() throws Exception {
+        UpdateBreedRequest request = new UpdateBreedRequest("newbulldog");
+        when(breedService.updateBreed(eq("bulldog"), any(UpdateBreedRequest.class)))
+                .thenReturn(BreedResponse.builder().id(1L).name("newbulldog").subBreeds(List.of()).build());
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.name").value("newbulldog"));
+    }
+
+    @Test
+    @DisplayName("returns 400 for blank name")
+    void updateBreed_blankName_returns400() throws Exception {
+        UpdateBreedRequest request = new UpdateBreedRequest("");
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    @Test
+    @DisplayName("returns 404 for unknown breed")
+    void updateBreed_unknownBreed_returns404() throws Exception {
+        UpdateBreedRequest request = new UpdateBreedRequest("newname");
+        when(breedService.updateBreed(eq("ghost"), any(UpdateBreedRequest.class)))
+                .thenThrow(new BreedNotFoundException("ghost"));
+
+        mockMvc.perform(put("/api/v1/breeds/ghost")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    @Test
+    @DisplayName("returns 409 for duplicate breed name")
+    void updateBreed_duplicateName_returns409() throws Exception {
+        UpdateBreedRequest request = new UpdateBreedRequest("poodle");
+        when(breedService.updateBreed(eq("bulldog"), any(UpdateBreedRequest.class)))
+                .thenThrow(new BreedAlreadyExistsException("poodle"));
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    } // end UpdateBreed
+
+    @Nested
+    @DisplayName("GET /api/v1/breeds/{name}/sub-breeds")
+    class GetSubBreeds {
+
+    @Test
+    @DisplayName("returns 200 with sub-breed list")
+    void getSubBreeds_existingBreed_returns200() throws Exception {
+        when(breedService.getSubBreeds("bulldog")).thenReturn(List.of("boston", "french"));
+
+        mockMvc.perform(get("/api/v1/breeds/bulldog/sub-breeds"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data[0]").value("boston"))
+                .andExpect(jsonPath("$.data[1]").value("french"));
+    }
+
+    @Test
+    @DisplayName("returns 404 for unknown breed")
+    void getSubBreeds_unknownBreed_returns404() throws Exception {
+        when(breedService.getSubBreeds("ghost")).thenThrow(new BreedNotFoundException("ghost"));
+
+        mockMvc.perform(get("/api/v1/breeds/ghost/sub-breeds"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    } // end GetSubBreeds
+
+    @Nested
+    @DisplayName("PUT /api/v1/breeds/{name}/sub-breeds/{subBreed}")
+    class UpdateSubBreed {
+
+    @Test
+    @DisplayName("returns 200 for valid rename")
+    void updateSubBreed_validRequest_returns200() throws Exception {
+        UpdateSubBreedRequest request = new UpdateSubBreedRequest("english");
+        when(breedService.updateSubBreed(eq("bulldog"), eq("french"), any(UpdateSubBreedRequest.class)))
+                .thenReturn(BreedResponse.builder().id(1L).name("bulldog").subBreeds(List.of("boston", "english")).build());
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog/sub-breeds/french")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.subBreeds[1]").value("english"));
+    }
+
+    @Test
+    @DisplayName("returns 400 for blank name")
+    void updateSubBreed_blankName_returns400() throws Exception {
+        UpdateSubBreedRequest request = new UpdateSubBreedRequest("");
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog/sub-breeds/french")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    @Test
+    @DisplayName("returns 404 for unknown sub-breed")
+    void updateSubBreed_unknownSubBreed_returns404() throws Exception {
+        UpdateSubBreedRequest request = new UpdateSubBreedRequest("english");
+        when(breedService.updateSubBreed(eq("bulldog"), eq("ghost"), any(UpdateSubBreedRequest.class)))
+                .thenThrow(new BreedNotFoundException("ghost"));
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog/sub-breeds/ghost")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    @Test
+    @DisplayName("returns 409 for duplicate sub-breed name")
+    void updateSubBreed_duplicateName_returns409() throws Exception {
+        UpdateSubBreedRequest request = new UpdateSubBreedRequest("boston");
+        when(breedService.updateSubBreed(eq("bulldog"), eq("french"), any(UpdateSubBreedRequest.class)))
+                .thenThrow(new SubBreedAlreadyExistsException("boston", "bulldog"));
+
+        mockMvc.perform(put("/api/v1/breeds/bulldog/sub-breeds/french")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value("error"));
+    }
+
+    } // end UpdateSubBreed
 }

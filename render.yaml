@@ -3,7 +3,7 @@ services:
     name: dogs-web-api
     env: docker
     plan: free
-    region: oregon
+    region: singapore
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
     envVars:
@@ -33,6 +33,6 @@ services:
 databases:
   - name: dogs-db
     plan: free
-    region: oregon
+    region: singapore
     databaseName: dogsdb
     user: dogsuser

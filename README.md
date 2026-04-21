@@ -8,11 +8,9 @@ The API is pre-seeded with 70+ dog breeds from the supplied dataset and exposes 
 
 | Resource | URL |
 |---|---|
-| Swagger UI | `https://dogs-web-api.onrender.com/swagger-ui.html` |
-| API Docs (JSON) | `https://dogs-web-api.onrender.com/api-docs` |
-| Health Check | `https://dogs-web-api.onrender.com/actuator/health` |
-
-> **Note:** Update these links with your actual Render deployment URL after deploying.
+| Swagger UI | `https://dogs-web-api-9ttp.onrender.com/swagger-ui.html` |
+| API Docs (JSON) | `https://dogs-web-api-9ttp.onrender.com/api-docs` |
+| Health Check | `https://dogs-web-api-9ttp.onrender.com/actuator/health` |
 
 ---
 
@@ -48,6 +46,7 @@ The API is pre-seeded with 70+ dog breeds from the supplied dataset and exposes 
 |---|---|---|
 | `GET` | `/api/v1/breeds/{breed}/sub-breeds` | List sub-breeds for a breed |
 | `POST` | `/api/v1/breeds/{breed}/sub-breeds` | Add a sub-breed |
+| `PUT` | `/api/v1/breeds/{breed}/sub-breeds/{subBreed}` | Rename a sub-breed |
 | `DELETE` | `/api/v1/breeds/{breed}/sub-breeds/{subBreed}` | Remove a sub-breed |
 
 All breed and sub-breed names are **case-insensitive** and stored in **lowercase**.
@@ -120,6 +119,8 @@ docker run -p 8080:8080 \
 
 Test reports are generated at `build/reports/tests/test/index.html`.
 
+Coverage reports (Jacoco) are generated at `build/reports/jacoco/test/html/index.html`. The minimum required coverage is **80%**.
+
 ---
 
 ## Deployment on Render
@@ -139,7 +140,9 @@ This project includes a `render.yaml` Blueprint for one-click deployment.
 | Variable | Source |
 |---|---|
 | `SPRING_PROFILES_ACTIVE` | `prod` |
-| `SPRING_DATASOURCE_URL` | Render PostgreSQL (JDBC URL) |
+| `DB_HOST` | Render PostgreSQL host |
+| `DB_PORT` | Render PostgreSQL port |
+| `DB_NAME` | Render PostgreSQL database name |
 | `SPRING_DATASOURCE_USERNAME` | Render PostgreSQL user |
 | `SPRING_DATASOURCE_PASSWORD` | Render PostgreSQL password |
 
@@ -157,7 +160,7 @@ src/main/java/com/dogs/api/
 ├── controllers/
 │   └── BreedController.java    # REST endpoints
 ├── dto/
-│   ├── request/                # CreateBreedRequest, UpdateBreedRequest, AddSubBreedRequest
+│   ├── request/                # CreateBreedRequest, UpdateBreedRequest, AddSubBreedRequest, UpdateSubBreedRequest
 │   └── response/               # ApiResponse<T>, BreedResponse
 ├── exception/
 │   ├── BreedNotFoundException.java
@@ -184,7 +187,7 @@ src/main/java/com/dogs/api/
 | **S** — Single Responsibility | Controller handles HTTP only; Service handles business logic; Repository handles data |
 | **O** — Open/Closed | `BreedService` interface allows new implementations without modifying the controller |
 | **L** — Liskov Substitution | `BreedServiceImpl` is fully substitutable for `BreedService` |
-| **I** — Interface Segregation | `BreedRepository` and `SubBreedRepository` are focused, independent interfaces |
+| **I** — Interface Segregation | `BreedRepository` is focused on breed data access; service methods are scoped to single responsibilities |
 | **D** — Dependency Inversion | `BreedController` depends on `BreedService` interface, not the concrete implementation |
 
 ---
